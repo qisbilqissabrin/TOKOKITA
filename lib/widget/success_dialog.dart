@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 
-// Definisi ulang VoidCallback jika belum ada di file ini
-typedef VoidCallback = void Function();
-
 class Consts {
   Consts._();
   static const double padding = 16.0;
   static const double avatarRadius = 66.0;
 }
 
-class WarningDialog extends StatelessWidget {
-  final String description;
-  final VoidCallback? okClick;
+typedef VoidCallback = void Function();
 
-  const WarningDialog({
+class SuccessDialog extends StatelessWidget {
+  final String description;
+  final VoidCallback okClick;
+
+  const SuccessDialog({
     Key? key,
     required this.description,
-    this.okClick,
+    required this.okClick,
   }) : super(key: key);
 
   @override
@@ -56,11 +55,11 @@ class WarningDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           const Text(
-            "GAGAL",
+            "SUKSES",
             style: TextStyle(
               fontSize: 24.0,
               fontWeight: FontWeight.w700,
-              color: Colors.red,
+              color: Colors.green,
             ),
           ),
           const SizedBox(height: 16.0),
@@ -74,12 +73,10 @@ class WarningDialog extends StatelessWidget {
           const SizedBox(height: 24.0),
           Align(
             alignment: Alignment.bottomRight,
-            child: ElevatedButton(
+            child: OutlinedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                if (okClick != null) {
-                  okClick!();
-                }
+                okClick();
               },
               child: const Text("OK"),
             ),

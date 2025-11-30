@@ -1,52 +1,57 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:tokokita/helpers/api.dart';
+import 'package:tokokita/helpers/api_url.dart';
 import 'package:tokokita/model/produk.dart';
 
 class ProdukBloc {
-  static const String baseUrl = "https://contoh-api.com/api/produk";
-
-  // Get All Produk
   static Future<List<Produk>> getProduks() async {
-    final response = await http.get(Uri.parse(baseUrl));
-    if (response.statusCode == 200) {
-      List list = json.decode(response.body);
-      return list.map((e) => Produk.fromJson(e)).toList();
-    } else {
-      throw Exception("Gagal mengambil data");
+    String apiUrl = ApiUrl.listProduk;
+    var response = await Api().get(apiUrl);
+    var jsonObj = json.decode(response.body);
+    List<dynamic> listProduk = (jsonObj as Map<String, dynamic>)['data'];
+    List<Produk> produks = [];
+    for (int i = 0; i < listProduk.length; i++) {
+      produks.add(Produk.fromJson(listProduk[i]));
     }
+    return produks;
   }
 
-  // Create Produk
-  static Future<bool> addProduk(Produk produk) async {
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      body: {
-        "kode_produk": produk.kodeProduk,
-        "nama_produk": produk.namaProduk,
-        "harga": produk.hargaProduk.toString(),
-      },
-    );
+  static Future addProduk({required Produk produk}) async {
+    String apiUrl = ApiUrl.createProduk;
 
-    return response.statusCode == 200;
+    var body = {
+      "kode_produk": produk.kodeProduk,
+      "nama_produk": produk.namaProduk,
+      "harga": produk.hargaProduk.toString(),
+    };
+
+    var response = await Api().post(apiUrl, body);
+    var jsonObj = json.decode(response.body);
+    return jsonObj['status'];
   }
 
-  // Update Produk
-  static Future<bool> updateProduk(Produk produk) async {
-    final response = await http.put(
-      Uri.parse("$baseUrl/${produk.id}"),
-      body: {
-        "kode_produk": produk.kodeProduk,
-        "nama_produk": produk.namaProduk,
-        "harga": produk.hargaProduk.toString(),
-      },
-    );
+  static Future updateProduk({required Produk produk}) async {
+    String apiUrl = ApiUrl.updateProduk(int.parse(produk.id!));
+    print(apiUrl);
 
-    return response.statusCode == 200;
+    var body = {
+      "kode_produk": produk.kodeProduk,
+      "nama_produk": produk.namaProduk,
+      "harga": produk.hargaProduk.toString(),
+    };
+
+    print("Body : $body");
+    var response = await Api().put(apiUrl, jsonEncode(body));
+    var jsonObj = json.decode(response.body);
+    return jsonObj['status'];
   }
 
-  // Delete Produk
-  static Future<bool> deleteProduk({required int id}) async {
-    final response = await http.delete(Uri.parse("$baseUrl/$id"));
-    return response.statusCode == 200;
+  static Future<bool> deleteProduk({int? id}) async {
+    String apiUrl = ApiUrl.deleteProduk(id!);
+
+    var response = await Api().delete(apiUrl);
+    // Backend mengembalikan HTTP 200 jika berhasil dihapus, regardless of 'data' field
+    // Jika ada error, Api().delete() akan throw exception di _returnResponse()
+    return true; // HTTP 200 = sukses hapus
   }
 }
