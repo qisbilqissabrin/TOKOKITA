@@ -1,97 +1,120 @@
-## Penjelasan Kode
+# TOKOKITA
 
-### 1. `main.dart`
+## 1. Proses Otentikasi Pengguna
 
-* **Fungsi:** Menjalankan widget root (`MyApp`) dan menentukan halaman awal yang akan dimuat.
-* **Implementasi:**
-    * Mengimpor `material.dart` dan halaman awal yang dituju (`login_page.dart` atau `produk_page.dart` tergantung konfigurasi akhir).
-    * `main()`: Memanggil `runApp(const MyApp())`.
-    * `MyApp`: Mengembalikan `MaterialApp` dengan judul 'Toko Kita' dan menunjuk ke halaman awal (misalnya, `LoginPage()` atau `ProdukPage()`).
+### a. Proses Registrasi
 
----
+**Tujuan:** Membuat akun pengguna baru.
 
-### 2. `ui/login_page.dart`
-<img width="782" height="888" alt="Screenshot 2025-11-25 191801" src="https://github.com/user-attachments/assets/dc6a204b-2d5a-4e64-947b-cbef11679ca8" />
-Halaman ini berfungsi untuk otentikasi pengguna.
+* **Langkah A: Input Data**
+    Pengguna mengisi semua *field* (Nama, Email, Password, Konfirmasi Password) pada form Registrasi.
+    
+<img width="741" height="819" alt="Screenshot 2025-12-01 003016" src="https://github.com/user-attachments/assets/893ee45c-2554-4c0f-84f8-953858f33a84" />
 
-* **Tujuan:** Meminta input **Email** dan **Password**, serta menyediakan navigasi ke halaman Registrasi.
-* **Komponen Kunci:**
-    * `GlobalKey<FormState>`: Digunakan untuk memvalidasi semua input *field* secara kolektif saat tombol Login ditekan.
-    * `TextEditingController`: Digunakan untuk mengambil nilai teks dari *Text Form Field* Email dan Password.
-    * `_emailTextField()` & `_passwordTextField()`: Widget yang mengimplementasikan `TextFormField` lengkap dengan properti `validator` untuk memastikan input tidak kosong dan memenuhi kriteria (misalnya, panjang minimal password).
-    * `_buttonLogin()`: Tombol yang memicu validasi form melalui `_formKey.currentState.validate()`.
-    * `_menuRegistrasi()`: Menggunakan `InkWell` untuk melakukan navigasi (`Navigator.push`) ke `RegistrasiPage`.
 
----
+* **Langkah B: Konfirmasi Sukses**
+    Setelah menekan tombol Registrasi, sistem memberikan *popup* konfirmasi bahwa proses berhasil, mengarahkan pengguna ke halaman Login.
+<img width="746" height="824" alt="Screenshot 2025-12-01 003731" src="https://github.com/user-attachments/assets/cbc11a91-2114-48aa-be16-187036de66f1" />
 
-### 3. `ui/registrasi_page.dart`
-<img width="774" height="892" alt="Screenshot 2025-11-25 191841" src="https://github.com/user-attachments/assets/fa9485f1-c1ce-45fe-8fe0-1e997ff310e1" />
-Halaman ini menangani pendaftaran pengguna baru.
 
-* **Tujuan:** Mengambil input data lengkap untuk membuat akun baru.
-* **Komponen Kunci:**
-    * Sama seperti Login, menggunakan `GlobalKey<FormState>` dan `TextEditingController` untuk Nama, Email, dan Password.
-    * **Validasi Kompleks:** Menerapkan validasi:
-        * **Nama:** Minimal 3 karakter.
-        * **Email:** Harus diisi dan memiliki format *regex* yang valid.
-        * **Password:** Minimal 6 karakter.
-        * **Konfirmasi Password:** Membandingkan nilai input dengan nilai di `_passwordTextController.text` untuk memastikan keduanya sama.
-    * `_buttonRegistrasi()`: Memicu proses validasi form sebelum data dikirim ke server.
+**Contoh Logika Kode:**
+```java
+if (password.equals(konfirmasiPassword)) {
+    // Menyimpan data ke database
+    databaseManager.saveUser(nama, email, password);
+    showSuccessPopup("Registrasi berhasil, silakan login.");
+}
+````
 
----
+2. Proses Login
 
-### 4. `model/login.dart` & `model/registrasi.dart`
+**Tujuan:** Memverifikasi identitas pengguna untuk mengakses sistem.
 
-* **Tujuan:** Digunakan untuk memetakan (deserialisasi) respons data yang diterima dari API dalam format JSON ke dalam objek Dart yang terstruktur.
-* **Implementasi:**
-    * Memiliki properti seperti `code`, `status`, `token`, `userID`, dll.
-    * **`factory ClassName.fromJson(Map<String, dynamic> obj)`:** *Factory constructor* standar yang bertanggung jawab untuk mengambil data dari map JSON (`obj`) dan mengisi properti objek model. Logika pada `Login.fromJson` juga menyertakan *conditional check* (`if (obj['code'] == 200)`) untuk menangani respons Sukses (dengan data terstruktur) dan Gagal (dengan data kosong/error).
+  * **Langkah A: Input Kredensial**
+    Pengguna memasukkan Email (`icis@gmail.com`) dan Password yang telah terdaftar pada halaman Login.
+<img width="741" height="825" alt="Screenshot 2025-12-01 003808" src="https://github.com/user-attachments/assets/febe97b5-5653-4f09-9bcd-c6ca143cb9f7" />
 
----
+  * **Langkah B: Navigasi ke List Produk**
+    Verifikasi berhasil akan mengalihkan pengguna ke halaman **List Produk** (tampilan awal).
+<img width="739" height="820" alt="Screenshot 2025-12-01 003822" src="https://github.com/user-attachments/assets/ca9727fb-3f7b-4e92-b905-fd21b2476f16" />
 
-### 5. `model/produk.dart`
+**Contoh Logika Kode:**
 
-Kelas model khusus untuk data produk.
+```java
+if (databaseManager.verifyCredentials(email, password)) {
+    // Login berhasil
+    navigateToProductList();
+} else {
+    showErrorToast("Email atau Password salah.");
+}
+```
 
-* **Tujuan:** Merepresentasikan data produk dengan properti seperti `id`, `kodeProduk`, `namaProduk`, dan `hargaProduk`.
-* **Implementasi:** Menyediakan *constructor* utama dan *factory constructor* `Produk.fromJson` untuk deserialisasi data produk dari API.
+-----
 
----
+## 3. Proses Manajemen Produk (CRUD)
 
-### 6. `ui/produk_page.dart`
-Halaman utama yang menampilkan daftar semua produk.
+Pengelolaan data produk dilakukan setelah pengguna berhasil Login.
 
-* **Tujuan:** Menampilkan *list* produk dan menyediakan navigasi serta opsi *logout*.
-* **Komponen Kunci:**
-    * **`AppBar Actions`**: Menyediakan ikon **Tambah (`Icons.add`)** yang, ketika diketuk (`onTap`), menavigasi ke `ProdukForm` untuk menambahkan produk baru.
-    * **`Drawer`**: Menu samping yang berisi opsi `Logout`.
-    * **`ListView`**: Digunakan untuk menampilkan item-item produk, yang setiap itemnya diwakili oleh widget `ItemProduk`.
-    * **`ItemProduk` (StatelessWidget)**: Widget terpisah yang menerima objek `Produk` dan menampilkannya dalam `Card` atau `ListTile`. `GestureDetector` pada item ini memungkinkan navigasi ke `ProdukDetail` saat diketuk, sambil mengirimkan objek produk terkait.
+### 3.1. Create (C): Tambah Data Produk
 
----
+  * **Langkah A: Pengisian Form Tambah Produk**
+    Pengguna mengisi form **TAMBAH PRODUK** dengan detail: Kode (`01`), Nama (`Penghapus`), dan Harga (`1000`).
+<img width="738" height="818" alt="Screenshot 2025-12-01 003842" src="https://github.com/user-attachments/assets/8b3754fc-9a79-4e00-a434-b9a2780d3bc5" />
 
-### 7. `ui/produk_detail.dart`
-<img width="778" height="904" alt="Screenshot 2025-11-25 191519" src="https://github.com/user-attachments/assets/6f709e89-6c4a-44e3-bba7-13d537a1d8d3" />
-Halaman untuk melihat detail lengkap satu produk dan mengelola operasinya (Edit/Delete).
 
-* **Tujuan:** Menampilkan data spesifik produk yang dipilih.
-* **Komponen Kunci:**
-    * Menerima objek `Produk` melalui `widget.produk!`.
-    * Menampilkan detail (`kodeProduk`, `namaProduk`, `hargaProduk`) menggunakan widget `Text`.
-    * `_tombolHapusEdit()`: Berisi `Row` dengan dua tombol:
-        * **EDIT**: Navigasi ke `ProdukForm` sambil **mengirimkan objek produk** (`ProdukForm(produk: widget.produk!)`) untuk mengaktifkan mode Update.
-        * **DELETE**: Memanggil `confirmHapus()` untuk menampilkan `AlertDialog`.
-    * `confirmHapus()`: Menampilkan dialog konfirmasi. Jika "Ya" ditekan, ia akan memicu fungsi penghapusan data (asumsi memanggil *bloc* atau *service* tertentu) dan kemudian menavigasi kembali ke `ProdukPage`.
+  * **Langkah B: Data Tampil di List**
+    Produk baru yang disimpan akan langsung terlihat pada halaman **List Produk**.
+<img width="741" height="824" alt="Screenshot 2025-12-01 003850" src="https://github.com/user-attachments/assets/ef0d7984-e472-48a3-b6c9-4176dfcfe769" />
 
----
 
-### 8. `ui/produk_form.dart`
-<img width="775" height="901" alt="Screenshot 2025-11-25 191554" src="https://github.com/user-attachments/assets/298bddbc-c105-4735-ab3c-1807d6c683ae" />
-Halaman form yang digunakan untuk membuat produk baru atau mengedit produk yang sudah ada.
+**Contoh Logika Kode:**
 
-* **Tujuan:** Menangani proses *Create* (Tambah) dan *Update* (Ubah) data produk.
-* **Komponen Kunci:**
-    * Menerima `Produk? produk` (nullable).
-    * `initState()` & `isUpdate()`: Logika untuk menentukan apakah form berada dalam mode **TAMBAH** atau **UBAH**. Jika `widget.produk` tidak `null`, maka mode *Update* diaktifkan, dan data produk dimuat ke dalam *Text Controller*.
-    * `_kodeProdukTextField()`, `_namaProdukTextField()`, `_hargaProdukTextField()`: *Text Form Field* standar dengan validasi wajib diisi.
-    * `_buttonSubmit()`: Tombol yang teksnya berubah menjadi "SIMPAN" atau "UBAH" berdasarkan mode yang aktif. Setelah validasi berhasil, tombol ini memicu proses pengiriman data ke API.
+```java
+// Memanggil fungsi untuk menyimpan data produk
+databaseManager.insertProduct(kode, nama, harga);
+refreshProductList();
+```
+
+### a. Read (R): Melihat Detail Produk
+
+  * **Akses Detail Produk**
+    Halaman **Detail Produk** menampilkan informasi produk lengkap, termasuk opsi **EDIT** dan **DELETE**.
+<img width="737" height="814" alt="Screenshot 2025-12-01 003900" src="https://github.com/user-attachments/assets/a48f949f-5eea-4572-8377-be9e3240605a" />
+
+### b. Update (U): Mengubah Data Produk
+
+  * **Langkah A: Modifikasi Data pada Form**
+    Melalui tombol EDIT, pengguna mengakses form **UBAH PRODUK** dan memodifikasi nilai (Contoh: Harga diubah dari `1000` menjadi `2000`).
+<img width="739" height="828" alt="Screenshot 2025-12-01 003916" src="https://github.com/user-attachments/assets/f3b1573b-b316-41d4-a5a9-c4d4040bf413" />
+
+
+  * **Langkah B: Verifikasi Update di List**
+    Perubahan diterapkan, dan **List Produk** menampilkan harga yang sudah diupdate.
+<img width="751" height="829" alt="Screenshot 2025-12-01 003923" src="https://github.com/user-attachments/assets/04f05d4e-c52c-4b94-a1cc-3e6e9af97d24" />
+
+
+**Contoh Logika Kode:**
+
+```java
+// Melakukan update data produk berdasarkan Kode Produk
+databaseManager.updateProduct(kodeProduk, newName, newPrice);
+refreshProductList();
+```
+
+###  c. Delete (D): Menghapus Data Produk
+
+  * **Langkah A: Eksekusi Hapus**
+    Dari halaman Detail Produk, menekan tombol **DELETE** akan memicu proses penghapusan data.
+<img width="740" height="819" alt="Screenshot 2025-12-01 004011" src="https://github.com/user-attachments/assets/4242bafe-0e6f-45f1-be02-dfe49f9fb6ce" />
+
+  * **Langkah B: List Kembali Kosong**
+    Aplikasi kembali ke halaman **List Produk**, yang kini kembali kosong (jika produk yang dihapus adalah satu-satunya), memverifikasi bahwa data telah terhapus.
+<img width="733" height="894" alt="Screenshot 2025-12-01 005115" src="https://github.com/user-attachments/assets/99b3abe6-5b39-4816-ad94-90d1260019be" />
+
+**Contoh Logika Kode:**
+
+```java
+// Menghapus data berdasarkan ID/Kode produk
+databaseManager.deleteProduct(productId);
+navigateBackToProductList();
+```
